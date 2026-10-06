@@ -23,7 +23,7 @@
                 <option value="0.20">20%</option>
             </select><br><br>
 
-            <button type="button" id="calculate" onclick="calculateTip()">Calculate</button>
+            <button type="button" id="calculate" onclick="calculateTip()">Calculate and Save</button>
 
 
         </form>
@@ -33,32 +33,96 @@
     <fieldset>
     <p>Running Shift Total:</p>
     <p id="RunTotal"> $0 </p>
-    <p id="SavedTotal"> $0 </p>
+
+    <!--this is the P tag to be used by the database to display content-->
+    <p id="SavedTotal">Connect Supabase to load the saved total.</p>
     </fieldset>
 
+    <!-- Supabase's browser library. GitHub Pages can load this directly. -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         let aRunning = [];
+
+        // Find both values in your Supabase project under Connect or Settings > API Keys.
+        // A publishable key is safe to include in browser code. Never put a secret key here.
+        const SUPABASE_URL = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
+        const SUPABASE_PUBLISHABLE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+
+        const isSupabaseConfigured =
+            SUPABASE_URL.startsWith("https://") &&
+            !SUPABASE_URL.includes("PASTE_YOUR") &&
+            !SUPABASE_PUBLISHABLE_KEY.includes("PASTE_YOUR");
+
+        const supabaseClient = isSupabaseConfigured
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+            : null;
 
         //variable declerations
         let fBill = document.getElementById("bill");
         let fTip = document.getElementById("tips");
+        let calculateButton = document.getElementById("calculate");
+        let savedTotal = document.getElementById("SavedTotal");
+
+        // Runs the database function whose SQL is:
+        // select coalesce(sum(total_bill), 0) from public.calculator;
+        async function loadSavedTotal()
+        {
+            if (!supabaseClient)
+            {
+                savedTotal.textContent = "Connect Supabase to load the saved total.";
+                return;
+            }
+
+            savedTotal.textContent = "Loading saved total...";
+
+            const { data, error } = await supabaseClient.rpc("get_saved_total");
+
+            if (error)
+            {
+                console.error("Could not load the saved total:", error);
+                savedTotal.textContent = "Could not load saved total. Check the console.";
+                return;
+            }
+
+            const total = Number(data ?? 0);
+            savedTotal.textContent = "$" + total.toFixed(2);
+        }
+
+        async function saveCalculation(billInput, tipPercent, totalBill)
+        {
+            if (!supabaseClient)
+            {
+                throw new Error("Add your Supabase URL and publishable key first.");
+            }
+
+            const { error } = await supabaseClient
+                .from("calculator")
+                .insert({
+                    bill_input: billInput,
+                    tip_pct: tipPercent,
+                    total_bill: totalBill
+                });
+
+            if (error)
+            {
+                throw error;
+            }
+        }
+
         //functions
         //Uses form input to calculate tip and bill totals
-        function calculateTip()
+        async function calculateTip()
         {
             let fB = parseFloat(fBill.value);
             let fT = parseFloat(fTip.value);
-            let fTprc = fT * 100
+            let fTprc = fT * 100;
             
             if (fB > 0)
             {
                 let fBillTotal = fB + (fB * fT);
                 let fTipTotal = fB * fT;
 
-                document.getElementById("bill").value = '';
-                document.getElementById("tips").value = '';
-
-                let sOutPut = "At the chosen tip amount of " + fTprc + "% Tip amount is $" + fTipTotal.toFixed(2) + ", total bill is $" + fBillTotal.toFixed(2)
+                let sOutPut = "At the chosen tip amount of " + fTprc + "% Tip amount is $" + fTipTotal.toFixed(2) + ", total bill is $" + fBillTotal.toFixed(2);
                 let sRunTotal = 0;
 
                 document.getElementById("outPut").textContent = sOutPut;
@@ -72,14 +136,35 @@
                 });
 
                 document.getElementById("RunTotal").textContent = "$" + sRunTotal.toFixed(2);
+
+                calculateButton.disabled = true;
+                savedTotal.textContent = "Saving...";
+
+                try
+                {
+                    await saveCalculation(fB, fTprc, fBillTotal);
+                    document.getElementById("bill").value = "";
+                    await loadSavedTotal();
+                }
+                catch (error)
+                {
+                    console.error("Could not save the calculation:", error);
+                    savedTotal.textContent = "Could not save. Check the console.";
+                }
+                finally
+                {
+                    calculateButton.disabled = false;
+                }
             }
             else
             {
                 document.getElementById("outPut").textContent = "Bill input not valid";
             }
 
-        };
+        }
 
+        // The database total is loaded every time the page opens or refreshes.
+        loadSavedTotal();
 
     </script>
 </body>
