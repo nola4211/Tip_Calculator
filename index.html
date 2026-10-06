@@ -5,38 +5,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Tip Calculator</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #16231f;
+            --muted: #65736e;
+            --surface: rgba(255, 255, 255, 0.92);
+            --line: rgba(20, 84, 65, 0.12);
+            --accent: #147d64;
+            --accent-dark: #0d5e4c;
+            --accent-soft: #e8f6f1;
+            --warm: #fff4dc;
+            --warm-ink: #8a5a00;
+            --shadow: 0 24px 70px rgba(22, 67, 55, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 48px 20px;
+            display: grid;
+            place-items: center;
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 15% 15%, rgba(255, 224, 156, 0.65), transparent 28%),
+                radial-gradient(circle at 85% 85%, rgba(88, 192, 157, 0.32), transparent 30%),
+                linear-gradient(135deg, #f4fbf8 0%, #edf5f1 48%, #fbf7ec 100%);
+        }
+
+        .app-shell {
+            width: min(100%, 760px);
+        }
+
+        .calculator-card {
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 28px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+        }
+
+        .app-header {
+            padding: 38px 40px 30px;
+            color: white;
+            background:
+                linear-gradient(120deg, rgba(8, 69, 55, 0.08), rgba(255, 255, 255, 0.08)),
+                var(--accent);
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            opacity: 0.76;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2rem, 6vw, 3.35rem);
+            line-height: 1;
+            letter-spacing: -0.045em;
+        }
+
+        .subtitle {
+            max-width: 520px;
+            margin: 14px 0 0;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .content {
+            padding: 34px 40px 40px;
+        }
+
+        fieldset {
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        fieldset + fieldset {
+            margin-top: 34px;
+        }
+
+        legend {
+            width: 100%;
+            margin-bottom: 18px;
+            padding: 0;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .calculator-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(150px, 0.65fr);
+            gap: 18px;
+            align-items: end;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .currency-mark {
+            position: absolute;
+            top: 50%;
+            left: 16px;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        input,
+        select {
+            width: 100%;
+            min-height: 52px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            color: var(--ink);
+            background: #f8fbfa;
+            font: inherit;
+            font-weight: 650;
+            outline: none;
+            transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+        }
+
+        input {
+            padding: 0 16px 0 34px;
+        }
+
+        select {
+            padding: 0 14px;
+            cursor: pointer;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(20, 125, 100, 0.12);
+        }
+
+        button {
+            grid-column: 1 / -1;
+            min-height: 54px;
+            margin-top: 2px;
+            border: 0;
+            border-radius: 15px;
+            color: white;
+            background: var(--accent);
+            box-shadow: 0 10px 24px rgba(20, 125, 100, 0.24);
+            font: inherit;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            background: var(--accent-dark);
+            box-shadow: 0 14px 28px rgba(20, 125, 100, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:focus-visible {
+            outline: 4px solid rgba(20, 125, 100, 0.2);
+            outline-offset: 3px;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.68;
+            transform: none;
+        }
+
+        #outPut {
+            min-height: 24px;
+            margin: 18px 0 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.55;
+        }
+
+        #outPut:empty {
+            display: none;
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .total-card {
+            min-height: 142px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: var(--accent-soft);
+        }
+
+        .total-card.saved {
+            color: var(--warm-ink);
+            background: var(--warm);
+            border-color: rgba(161, 105, 0, 0.12);
+        }
+
+        .total-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.68;
+        }
+
+        .total-value {
+            margin: 14px 0 0;
+            font-size: clamp(1.6rem, 5vw, 2.25rem);
+            font-weight: 850;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+            overflow-wrap: anywhere;
+        }
+
+        #SavedTotal {
+            font-size: clamp(1rem, 3vw, 2.25rem);
+        }
+
+        .footnote {
+            margin: 16px 0 0;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 620px) {
+            body {
+                padding: 20px 14px;
+                place-items: start center;
+            }
+
+            .app-header,
+            .content {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+
+            .calculator-form,
+            .totals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .total-card {
+                min-height: 120px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition: none !important;
+            }
+        }
+    </style>
 </head>
 <body>
-    
-    <h1>Tip Calculator</h1>
-<!-- Bill and Tip form -->
-    <fieldset>
-        <form>
-            <label for="bill">Bill Amount</label>
-            <input type="number" name="bill" id="bill"><br><br>
+    <main class="app-shell">
+        <section class="calculator-card">
+            <header class="app-header">
+                <p class="eyebrow">Shift companion</p>
+                <h1>Tip Calculator</h1>
+                <p class="subtitle">Calculate each check, keep a running shift total, and save the full amount to your database.</p>
+            </header>
 
-            <label for="tips">Tip Amount</label>
-            <select name="tips" id="tips">Tip amount
-                <option value="0.15">15%</option>
-                <option value="0.18">18%</option>
-                <option value="0.20">20%</option>
-            </select><br><br>
+            <div class="content">
+                <!-- Bill and Tip form -->
+                <fieldset>
+                    <legend>New calculation</legend>
+                    <form class="calculator-form">
+                        <div class="field">
+                            <label for="bill">Bill amount</label>
+                            <div class="input-wrap">
+                                <span class="currency-mark" aria-hidden="true">$</span>
+                                <input type="number" name="bill" id="bill" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+                            </div>
+                        </div>
 
-            <button type="button" id="calculate" onclick="calculateTip()">Calculate and Save</button>
+                        <div class="field">
+                            <label for="tips">Tip amount</label>
+                            <select name="tips" id="tips">
+                                <option value="0.15">15%</option>
+                                <option value="0.18">18%</option>
+                                <option value="0.20">20%</option>
+                            </select>
+                        </div>
 
+                        <button type="button" id="calculate" onclick="calculateTip()">Calculate and Save</button>
+                    </form>
 
-        </form>
+                    <p id="outPut" aria-live="polite"></p>
+                </fieldset>
 
-    <p id="outPut"></p><br><br>
-    </fieldset>
-    <fieldset>
-    <p>Running Shift Total:</p>
-    <p id="RunTotal"> $0 </p>
+                <fieldset>
+                    <legend>Totals</legend>
+                    <div class="totals-grid">
+                        <article class="total-card">
+                            <span class="total-label">This session</span>
+                            <p class="total-value" id="RunTotal">$0.00</p>
+                        </article>
 
-    <!--this is the P tag to be used by the database to display content-->
-    <p id="SavedTotal">Connect Supabase to load the saved total.</p>
-    </fieldset>
+                        <article class="total-card saved">
+                            <span class="total-label">Saved in Supabase</span>
+                            <!-- This is the P tag used by the database to display content. -->
+                            <p class="total-value" id="SavedTotal" aria-live="polite">Connect Supabase to load the saved total.</p>
+                        </article>
+                    </div>
+                </fieldset>
+            </div>
+        </section>
+
+        <p class="footnote">Session totals reset when you refresh or close the page. Saved totals remain in Supabase.</p>
+    </main>
 
     <!-- Supabase's browser library. GitHub Pages can load this directly. -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
