@@ -1,0 +1,85 @@
+<!--This is a code that takes two inputs and uses JS function to calculate tip amounts and bill totals-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <h1>Tip Calculator</h1>
+<!-- Bill and Tip form -->
+    <fieldset>
+        <form>
+            <label for="bill">Bill Amount</label>
+            <input type="number" name="bill" id="bill"><br><br>
+
+            <label for="tips">Tip Amount</label>
+            <select name="tips" id="tips">Tip amount
+                <option value="0.15">15%</option>
+                <option value="0.18">18%</option>
+                <option value="0.20">20%</option>
+            </select><br><br>
+
+            <button type="button" id="calculate" onclick="calculateTip()">Calculate</button>
+
+
+        </form>
+
+    <p id="outPut"></p><br><br>
+    </fieldset>
+    <fieldset>
+    <p>Running Shift Total:</p>
+    <p id="RunTotal"> $0 </p>
+    </fieldset>
+
+    <script>
+        let aRunning = [];
+
+        //variable declerations
+        let fBill = document.getElementById("bill");
+        let fTip = document.getElementById("tips");
+        //functions
+        //Uses form input to calculate tip and bill totals
+        function calculateTip()
+        {
+            let fB = parseFloat(fBill.value);
+            let fT = parseFloat(fTip.value);
+            let fTprc = fT * 100
+            
+            if (fB > 0)
+            {
+                let fBillTotal = fB + (fB * fT);
+                let fTipTotal = fB * fT;
+
+                document.getElementById("bill").value = '';
+                document.getElementById("tips").value = '';
+
+                let sOutPut = "At the chosen tip amount of " + fTprc + "% Tip amount is $" + fTipTotal.toFixed(2) + ", total bill is $" + fBillTotal.toFixed(2)
+                let sRunTotal = 0;
+
+                document.getElementById("outPut").textContent = sOutPut;
+
+                aRunning.push(fBillTotal);
+
+                aRunning.forEach(bill => {
+                    
+                    sRunTotal += bill
+                    
+                });
+
+                document.getElementById("RunTotal").textContent = "$" + sRunTotal.toFixed(2);
+            }
+            else
+            {
+                document.getElementById("outPut").textContent = "Bill input not valid";
+            }
+
+        };
+
+
+    </script>
+</body>
+</html>
